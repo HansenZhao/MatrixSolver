@@ -1,0 +1,150 @@
+using System;
+using MathNet.Numerics.LinearAlgebra.Double;
+
+namespace MatrixSolverL
+{
+    class MatrixSolver
+    {
+        #region programInfo
+        private const string version = "Version 0.1";
+        private const string editorName = "Hansen Zhao";
+        private const string editorEmail = "zhaohs12@163.com";
+        #endregion
+
+        private int m_n = 0; //矩阵行数
+        private int m_m = 0;//矩阵列数
+
+        private DenseMatrix m_matrixA;
+        private DenseVector m_vectorB;
+
+        public static void publishInfo()
+        {
+            Console.WriteLine(version);
+            Console.WriteLine("Editor: " + editorName);
+            Console.WriteLine("Email: " + editorEmail);
+        }
+        private void init(int n, int m)
+        {
+            if (n < m)
+            {
+                Console.WriteLine("矩阵行数小于列数，必然无确定解！");
+                return;
+            }
+            m_n = n;
+            m_m = m;
+        }
+        public MatrixSolver(int n, int m)
+        {
+            init(n, m);
+        }
+        public MatrixSolver()
+        {
+            int row = 0, colom = 0;
+            Console.WriteLine("请输入要求解的线性方程组个数（行数）：");
+            while (!(int.TryParse(Console.ReadLine(), out row) && row > 0))
+            {
+                Console.WriteLine("输入无法识别，请输入正整数！");
+            }
+            Console.WriteLine("需要求解的线性方程组有{0}个", row);
+
+            Console.WriteLine("请输入要求解的线性方程组未知数个数（列数）：");
+            while(!(int.TryParse(Console.ReadLine(), out colom) && colom > 0))
+            {
+                Console.WriteLine("输入无法识别，请输入正整数！");
+            }                   
+            Console.WriteLine("需要求解的线性方程组有{0}个未知数", colom);
+
+            init(row, colom);
+        }
+        private bool stringLineSolver(string line, out double[] matrixLine,int count)
+        {
+            matrixLine = new double[count];
+            string[] subLines = line.Split('，');
+            if (subLines.Length == count)
+            {
+                for (int numberSolved = 0; numberSolved < subLines.Length; numberSolved++)
+                {
+                    if (double.TryParse(subLines[numberSolved], out matrixLine[numberSolved])) ;
+                    else
+                    {
+                        matrixLine = null;
+                        return false;
+                    }
+                }
+                return true;
+
+            }
+            else
+            {
+                matrixLine = null;
+                return false;
+            }
+        }
+        private bool stringLineSolver(string line, out double[] matrixLine)
+        {
+            return stringLineSolver(line, out matrixLine, m_m);
+        }
+        public void requireMatrixA()
+        {
+            m_matrixA = new DenseMatrix(m_n,m_m);
+            int rowsInput = 0;
+            double[] tmpDouble;
+            while (rowsInput < m_n)
+            {
+                Console.WriteLine("请输入矩阵的第{0}行数据，以中文逗号分隔数字", rowsInput + 1);
+                if(stringLineSolver(Console.ReadLine(),out tmpDouble))
+                {
+                    m_matrixA.SetRow(rowsInput, tmpDouble);
+                    rowsInput++;
+                    Console.WriteLine(m_matrixA.ToString());
+                }
+                else
+                {
+                    Console.WriteLine("无法识别输入！或者输入数量与未知数个数不符！");
+                    Console.WriteLine(m_matrixA.ToString());
+                }
+            }
+            Console.WriteLine("输入完成！");
+        }
+        public void requireVectorB()
+        {
+            double[] vectorB;
+            
+            while (true)
+            {
+                Console.WriteLine("请输入结果向量B，以中文逗号分隔数字");
+                if (stringLineSolver(Console.ReadLine(), out vectorB, m_n))
+                {
+                    m_vectorB = new DenseVector(vectorB);
+                    Console.WriteLine(m_vectorB.ToString());
+                    return;
+                }
+                else
+                {
+                    Console.WriteLine("无法识别输入！或者输入数量与方程组个数(行数)不符！");
+                }
+
+            }
+            
+        }
+        public void solve()
+        {
+            Console.WriteLine("正在解算方程组...");
+            var result = m_matrixA.LU().Solve(m_vectorB);
+            Console.WriteLine(result.ToString());
+        }
+
+    }
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            MatrixSolver.publishInfo();
+            MatrixSolver matrixSolver = new MatrixSolver();
+            matrixSolver.requireMatrixA();
+            matrixSolver.requireVectorB();
+            matrixSolver.solve();
+        }
+    }
+
+}
